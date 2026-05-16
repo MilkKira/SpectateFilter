@@ -97,8 +97,18 @@ namespace SpectateFilterClient
 							{
 								Log.LogWarning("CycleSpectatePlayers not found");
 							}
+							MethodInfo method4 = type.GetMethod("DetachCamera", BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+							if (method4 != null)
+							{
+								_harmony.Patch(method4, new HarmonyMethod(typeof(SpectatePatch), "DetachCameraPrefix", null), null, null, null, null);
+								Log.LogInfo("Patched DetachCamera");
+							}
+							else
+							{
+								Log.LogWarning("DetachCamera not found");
+							}
 							_patched = true;
-							Log.LogInfo("PATCHED: Spectate Filter active (4 methods)");
+							Log.LogInfo("PATCHED: Spectate Filter active (5 methods)");
 						}
 					}
 				}

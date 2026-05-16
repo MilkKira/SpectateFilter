@@ -163,5 +163,15 @@ namespace SpectateFilterClient
 				SpectateFilterPlugin.Log.LogError(string.Format("CyclePrefix err: {0}", ex));
 			}
 		}
+		
+		public static bool DetachCameraPrefix(bool force)
+		{
+			if (force)
+			{
+				return true;
+			}
+			SpectateFilterPlugin.Log.LogInfo("DetachCameraPrefix: blocked free camera detach key");
+			return false;
+		}
 	}
 }
