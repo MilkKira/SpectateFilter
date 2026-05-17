@@ -7,6 +7,8 @@ namespace SpectateFilterClient
 {
 	public static class SpectatePatch
 	{
+		private static DateTime _lastFreeCameraBlockLog = DateTime.MinValue;
+		
 		private static bool IsBot(object player)
 		{
 			if (player == null)
@@ -49,6 +51,51 @@ namespace SpectateFilterClient
 			return !(field == null) && SpectatePatch.IsBot(field.GetValue(listPlayer));
 		}
 		
+		private static object GetListPlayer(object listPlayer)
+		{
+			if (listPlayer == null)
+			{
+				return null;
+			}
+			FieldInfo field = listPlayer.GetType().GetField("_player", BindingFlags.Instance | BindingFlags.NonPublic);
+			return field == null ? null : field.GetValue(listPlayer);
+		}
+		
+		private static bool HasSpectatableHuman(object __instance)
+		{
+			if (__instance == null)
+			{
+				return false;
+			}
+			FieldInfo playersField = __instance.GetType().GetField("_players", BindingFlags.Instance | BindingFlags.NonPublic);
+			IList players = playersField == null ? null : playersField.GetValue(__instance) as IList;
+			if (players != null)
+			{
+				foreach (object player in players)
+				{
+					if (!SpectatePatch.IsBot(player))
+					{
+						return true;
+					}
+				}
+			}
+			FieldInfo trackerField = __instance.GetType().GetField("_playersTracker", BindingFlags.Instance | BindingFlags.NonPublic);
+			IDictionary tracker = trackerField == null ? null : trackerField.GetValue(__instance) as IDictionary;
+			if (tracker != null)
+			{
+				foreach (object obj in tracker)
+				{
+					DictionaryEntry dictionaryEntry = (DictionaryEntry)obj;
+					object player = SpectatePatch.GetListPlayer(dictionaryEntry.Value);
+					if (player != null && !SpectatePatch.IsBot(player))
+					{
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+		
 		public static void ClearAndAddPlayersPostfix(object __instance)
 		{
 			try
@@ -68,7 +115,10 @@ namespace SpectateFilterClient
 								num++;
 							}
 						}
-						SpectateFilterPlugin.Log.LogInfo(string.Format("ClearAndAddPlayersPostfix: removed {0} bots, remaining {1}", num, list.Count));
+						if (num > 0)
+						{
+							SpectateFilterPlugin.Log.LogDebug(string.Format("ClearAndAddPlayersPostfix: removed {0} bots, remaining {1}", num, list.Count));
+						}
 					}
 				}
 			}
@@ -80,7 +130,6 @@ namespace SpectateFilterClient
 		
 		public static void StartPostfix(object __instance)
 		{
-			SpectateFilterPlugin.Log.LogInfo("StartPostfix FIRED");
 			try
 			{
 				FieldInfo field = __instance.GetType().GetField("_playersTracker", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -108,7 +157,10 @@ namespace SpectateFilterClient
 						{
 							dictionary.Remove(obj2);
 						}
-						SpectateFilterPlugin.Log.LogInfo(string.Format("StartPostfix: removed {0} bots from tracker, remaining {1}", num, dictionary.Count));
+						if (num > 0)
+						{
+							SpectateFilterPlugin.Log.LogDebug(string.Format("StartPostfix: removed {0} bots from tracker, remaining {1}", num, dictionary.Count));
+						}
 					}
 				}
 			}
@@ -122,7 +174,6 @@ namespace SpectateFilterClient
 		{
 			if (SpectatePatch.IsBot(player))
 			{
-				SpectateFilterPlugin.Log.LogInfo("OnPlayerSpawnedPrefix: blocked bot");
 				return false;
 			}
 			return true;
@@ -130,7 +181,6 @@ namespace SpectateFilterClient
 		
 		public static void CycleSpectatePlayersPrefix(object __instance)
 		{
-			SpectateFilterPlugin.Log.LogInfo("CycleSpectatePlayersPrefix FIRED");
 			try
 			{
 				FieldInfo field = __instance.GetType().GetField("_playersTracker", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -154,7 +204,10 @@ namespace SpectateFilterClient
 						{
 							dictionary.Remove(obj2);
 						}
-						SpectateFilterPlugin.Log.LogInfo(string.Format("CyclePrefix: removed {0} bots from tracker, remaining {1}", num, dictionary.Count));
+						if (num > 0)
+						{
+							SpectateFilterPlugin.Log.LogDebug(string.Format("CyclePrefix: removed {0} bots from tracker, remaining {1}", num, dictionary.Count));
+						}
 					}
 				}
 			}
@@ -164,14 +217,31 @@ namespace SpectateFilterClient
 			}
 		}
 		
-		public static bool DetachCameraPrefix(bool force)
+		public static bool DetachCameraPrefix(object __instance, object[] __args)
 		{
-			if (force)
+			try
 			{
+				if (__args != null && __args.Length > 0 && __args[0] is bool && (bool)__args[0])
+				{
+					return true;
+				}
+				if (!SpectatePatch.HasSpectatableHuman(__instance))
+				{
+					return true;
+				}
+				DateTime now = DateTime.UtcNow;
+				if ((now - _lastFreeCameraBlockLog).TotalSeconds >= 3.0)
+				{
+					_lastFreeCameraBlockLog = now;
+					SpectateFilterPlugin.Log.LogDebug("DetachCameraPrefix: blocked free camera because spectatable teammate exists");
+				}
+				return false;
+			}
+			catch (Exception ex)
+			{
+				SpectateFilterPlugin.Log.LogError(string.Format("DetachCameraPrefix err: {0}", ex));
 				return true;
 			}
-			SpectateFilterPlugin.Log.LogInfo("DetachCameraPrefix: blocked free camera detach key");
-			return false;
 		}
 	}
 }

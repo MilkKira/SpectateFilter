@@ -8,7 +8,7 @@ using HarmonyLib;
 
 namespace SpectateFilterClient
 {
-    [BepInPlugin("com.milkkira.spectatefilter", "Spectate Filter", "1.1.0")]
+    [BepInPlugin("com.milkkira.spectatefilter", "Spectate Filter", "1.1.1")]
 	[BepInProcess("EscapeFromTarkov.exe")]
 	public class SpectateFilterPlugin : BaseUnityPlugin
 	{
@@ -20,7 +20,7 @@ namespace SpectateFilterClient
 		private void Awake()
 		{
 			Log = base.Logger;
-			Log.LogInfo("Spectate Filter v1.1.0");
+			Log.LogInfo("Spectate Filter v1.1.1 Loaded");
 		}
 		
 		private void Update()
