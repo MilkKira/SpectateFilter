@@ -107,6 +107,16 @@ namespace SpectateFilterClient
 							{
 								Log.LogWarning("DetachCamera not found");
 							}
+							MethodInfo method5 = type.GetMethod("ToggleVision", BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+							if (method5 != null)
+							{
+								_harmony.Patch(method5, new HarmonyMethod(typeof(SpectatePatch), "ToggleVisionPrefix", null), null, null, null, null);
+								Log.LogInfo("Patched ToggleVision");
+							}
+							else
+							{
+								Log.LogWarning("ToggleVision not found");
+							}
 							_patched = true;
 							Log.LogInfo("PATCHED: Spectate Filter active (5 methods)");
 						}

@@ -96,6 +96,9 @@ namespace SpectateFilterClient
 			return false;
 		}
 		
+		/**
+		 * 屏蔽列表
+		 */
 		public static void ClearAndAddPlayersPostfix(object __instance)
 		{
 			try
@@ -179,6 +182,9 @@ namespace SpectateFilterClient
 			return true;
 		}
 		
+		/**
+		 * 屏蔽切换敌人
+		 */
 		public static void CycleSpectatePlayersPrefix(object __instance)
 		{
 			try
@@ -217,6 +223,9 @@ namespace SpectateFilterClient
 			}
 		}
 		
+		/**
+		 * 屏蔽按下G启用自由摄像机（单人无效）
+		 */
 		public static bool DetachCameraPrefix(object __instance, object[] __args)
 		{
 			try
@@ -242,6 +251,14 @@ namespace SpectateFilterClient
 				SpectateFilterPlugin.Log.LogError(string.Format("DetachCameraPrefix err: {0}", ex));
 				return true;
 			}
+		}
+		
+		/**
+		 * 屏蔽热成像/夜视切换
+		 */
+		public static bool ToggleVisionPrefix(object __instance, object[] __args)
+		{
+				return false;
 		}
 	}
 }
